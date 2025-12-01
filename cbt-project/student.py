@@ -3,8 +3,14 @@
 #take test
 #display result
 import random
-class Cbt:
+import mysql.connector as sql
+from config import Config
+
+class Student:
     def __init__(self):
+        config = Config()
+        self.__db_cursor = config.get_db_cursor()
+        
         self.__num_of_students = int(input("Enter number of students: "))
         self.__final_students_registered = 0
         self.__students = []
@@ -103,7 +109,3 @@ class Cbt:
         self.register()
         self.take_test()
         self.show_results()
-
-
-cbt = Cbt()
-cbt.bootstrap()
