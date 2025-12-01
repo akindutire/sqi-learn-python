@@ -28,7 +28,7 @@ class Admin:
         self.db_cursor.execute("SELECT COUNT(*) FROM tests")
         return self.db_cursor.fetchone()[0]
         
-    def bootstrap(self):
+    def orchestrate(self):
         print("Admin Module Started...\n")
         
         while True:

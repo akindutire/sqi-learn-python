@@ -8,11 +8,10 @@ class CBTProject:
         
     def orchestrate(self):
         print("Welcome to CBT CLI application...\n")
-        self.__admin.bootstrap()
-        # self.__student.register()
-        # self.__student.take_test()
-        # self.__student.show_results()
         
+        self.__admin.orchestrate()
+        self.__student.orchestrate()
+
 
 # This implies that this file is being run directly
 if __name__ == "__main__":
