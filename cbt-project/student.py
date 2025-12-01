@@ -2,6 +2,7 @@
 #register student
 #take test
 #display result
+import json
 import random
 from config import Config
 
@@ -12,7 +13,7 @@ class Student:
         self.__questions = []
 
         # "What is the capital of Canada? \n A: Ottawa \n B: Alberta \n C: Vancouver",
-        #         "Who painted the Mona Lisa? \n A: Leonardo da Vinci \n B: Poseidon Reily \n C: Fred Coleman",
+        #         "Who painted the Mona Lisa? \n A: Leonardo Da Vinci \n B: Poseidon Reily \n C: Fred Coleman",
         #         "What is the chemical symbol for gold? \n A: Ag \n B: Ar \n C: Au"
     
     def orchestrate(self):
@@ -22,12 +23,12 @@ class Student:
         
         #Are there students? register
         no_of_students_exist = self.__no_of_student_exist()
-        print(f"Welcome to the Student Module..., there are {no_of_students_exist} students available to take test\n You can skip registration if need be")
+        print(f"\nWelcome to the Student Module..., there are {no_of_students_exist} students available to take test\n You can skip registration if need be")
         
         while True:
             print("""
                 1. Register student
-                2. Exit student registration
+                0. Exit student registration
                 """)
             choice = int(input("Enter your choice: "))
             if choice == 1:
@@ -44,9 +45,9 @@ class Student:
             exit()
         
         #populate students into class variable
-        self.__db_cursor.execute("SELECT id,name FROM students")
+        self.__db_cursor.execute("SELECT id,name,matric_no FROM students")
         student_data_frm_db = self.__db_cursor.fetchall()
-        self.__students = [{'id':student[0], 'name':student[1], 'question_and_answer': []} for student in student_data_frm_db]
+        self.__students = [{'id':student[0], 'name':student[1], 'matric_no': student[2], 'question_and_answer': []} for student in student_data_frm_db]
         
         #Further populate student question and answer if they have taken test before
         for i, student in enumerate(self.__students):
@@ -58,12 +59,11 @@ class Student:
         self.__db_cursor.execute("SELECT * FROM tests")
         tests = self.__db_cursor.fetchall()
         for test in tests:
-            t = f"{test[0]}. {test[1]} \n"
-            test_options = [(i,op) for i,op in enumerate(test[2].split(','), 1)]
+            t = f"{test[1]} \n"
+            test_options = [(i,op) for i,op in enumerate(json.loads(test[2]), 1)]
             for option in test_options:
                 t += f" {chr(64+option[0])}: {option[1]} \n"
             self.__questions.append({'id': test[0], 'qs': t, 'answer': test[3]})
-            
 
         
         # Take test or skip test
@@ -101,26 +101,32 @@ class Student:
                 '080'+str(random.randint(10000000,99999999)),
                 'RAND',
                 'SQI-PY-'+str(random.randint(1000,9999)),
+                None,
             ]
             students.append(data)
-            
-        self.__db_cursor.executemany("INSERT INTO students (id, name, email, phone, password, reg_number) VALUES (%s, %s, %s, %s, %s, %s)", students)
+
+        self.__db_cursor.executemany("INSERT INTO students (id, name, email, phone, password, matric_no, date_created) VALUES (%s, %s, %s, %s, %s, %s, %s)", students)
+        self.__db.commit()
     
     def __take_test(self):
         """Function to take test for all registered students"""
         
         for i, student in enumerate(self.__students):
-            if len(student['question_and_answer']) > 0:
-                print(f"{student['name']} has taken the test before, Skipping...\n")
-                continue
-            
-            print(f"\nStarting test for {student['name']}\n")
+
+            print(f"\nStarting test for {student['name'].title()}/{student['matric_no']}\n")
             questionCounter = 1
+            
+            all_question_id_answered_in_previous_attempt = [qa[0] for qa in student['question_and_answer']]
             for question in self.__questions:
+
+                if question['id'] in all_question_id_answered_in_previous_attempt:
+                    print(f"{student['name'].title()} has answered this question (Q{question['id']}) before, Skipping...\n")
+                    continue
+                
                 if questionCounter > 1:
                     print("-------------------------\n")
                     
-                print(f"Q: {question.qs}")
+                print(f"Q{questionCounter}: {question['qs']}")
                 studentAnswer = str(input("Enter your answer (A, B, C): ")).strip()
                 
                 continuationStatement = 'Moving on...'
@@ -151,6 +157,7 @@ class Student:
                 self\
                     .__db_cursor\
                     .execute("INSERT INTO test_responses (id, answer_picked, is_correct, test_id, student_id) VALUES (%s, %s, %s, %s, %s)", (None, 66-ord(student_answer), is_correct, question_id, student_id))
+        self.__db.commit()
 
     def __show_results(self):
         """Result and granding display"""
@@ -166,7 +173,8 @@ class Student:
         
         isFirstStudentIteration = True
         for student in self.__students:
-            name = student['name'].capitalize()
+            name = student['name'].title()
+            matric_no = student['matric_no'].upper()
             student_question_and_answer = student['question_and_answer']
             score = 0
             for qa in student_question_and_answer:
@@ -176,21 +184,21 @@ class Student:
             #Trying to get the first student score as min
             if isFirstStudentIteration == True:
                 _min = score
-                _min_stud = name
+                _min_stud = matric_no
                 isFirstStudentIteration = False
                 
             grade = "Fail"
             if score >= _highest_possible_score/2:
                 grade = "Pass"
-            print(f"{name} = {score}, Grade: {grade}")
+            print(f"{name} / {matric_no} = {score}, Grade: {grade}")
             
             if score > _max:
                 _max = score
-                _max_stude = name
+                _max_stude = matric_no
             
             if score < _min:
                 _min = score
-                _min_stud = name
+                _min_stud = matric_no
 
             _total += score
             
