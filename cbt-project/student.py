@@ -23,21 +23,29 @@ class Student:
             "A", "A", "C",
         ]
 
-    def register(self):
+    def __no_of_student_exist(self):
+        """Function to return number of students already registered"""
+        self.__db_cursor.execute("SELECT COUNT(*) FROM students")
+        return self.__db_cursor.fetchone()[0]
+
+    def __register(self, num_of_student_to_register):
         """Function to register students for the test"""
-        for i in range(1, self.__num_of_students + 1):
+        students = []
+        for i in range(1, num_of_student_to_register + 1):
             name = str(input(f"Enter name of student {i}: "))
-            if name in [student['name'] for student in self.__students]:
+            if name in [student[0] for student in students]:
                 print(f"Student {name} has been registered, Skipping...\n")
                 continue
-            age = int(input(f"Enter student {i}: age "))
-            data = {
-                'name': name,
-                'age': age if age > 0 else random.randint(10,30),
-                'score': 0
-            }
-            self.__students.append(data)
-            self.__final_students_registered += 1
+            data = [
+                name,
+                name+'@'+"sqi-pyhton.com",
+                '080'+str(random.randint(10000000,99999999)),
+                'RAND',
+                'SQI-PY-'+str(random.randint(1000,9999)),
+            ]
+            students.append(data)
+            
+        self.__db_cursor.executemany("INSERT INTO students (name, email, phone, password, reg_number) VALUES (%s, %s, %s, %s, %s)", students)
     
     def take_test(self):
         """Function to take test for all registered students"""
@@ -106,6 +114,21 @@ class Student:
 
     
     def bootstrap(self):
-        self.register()
-        self.take_test()
-        self.show_results()
+        #Are there students? register
+        print(f"Welcome to the Student Module..., there are {self.__no_of_student_exist()} students available to take test\nIf you are a new student, please register first.")
+        
+        while True:
+            print("""
+                1. Register student
+                2. Exit student registration
+                """)
+            choice = int(input("Enter your choice: "))
+            if choice == 1:
+                num_of_student_to_register = int(input("Enter number of student to register: "))
+                self.__register(num_of_student_to_register)
+            else:
+                print("Exiting student registration...\n")
+                break
+            
+        
+        
