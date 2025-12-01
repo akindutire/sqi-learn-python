@@ -107,6 +107,10 @@ class Student:
         """Function to take test for all registered students"""
         
         for i, student in enumerate(self.__students):
+            if len(student['question_and_answer']) > 0:
+                print(f"{student['name']} has taken the test before, Skipping...\n")
+                continue
+            
             print(f"\nStarting test for {student['name']}\n")
             questionCounter = 1
             for question in self.__questions:
