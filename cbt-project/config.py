@@ -5,7 +5,7 @@ class Config:
     def __init__(self):
         load_dotenv(override=True)
         self.__host = os.getenv("DB_HOST")
-        self.__user = os.getenv("DB_USER"),
+        self.__user = os.getenv("DB_USER")
         self.__password = os.getenv("DB_PASSWORD")
         self.__database = os.getenv("DB_NAME")            
     
