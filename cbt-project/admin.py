@@ -26,17 +26,16 @@ class Admin:
     
     def __no_of_question_exist(self):
         self.db_cursor.execute("SELECT COUNT(*) FROM tests")
-        count = self.db_cursor.fetchone()[0]
-        return count
-    
+        return self.db_cursor.fetchone()[0]
+        
     def bootstrap(self):
         print("Admin Module Started...\n")
-        print("""
+        
+        while True:
+            print("""
               1. Create test
               0. Exit/Skip test creation
               """)
-        
-        while True:
             choice = int(input("Enter your choice: "))
             if choice == 0:
                 print("Exiting test creation...\n")
