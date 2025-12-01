@@ -1,4 +1,5 @@
 from config import Config
+import json
 class Admin:
     def __init__(self):
         self.__config = Config()
@@ -8,7 +9,7 @@ class Admin:
         # Only connect to db when needed
         self.__db, self.__db_cursor = self.__config.get_db_cursor()
         
-        print("Admin Module Started...\n")
+        print("\nAdmin Module Started...\n")
         
         while True:
             print("""
@@ -33,6 +34,10 @@ class Admin:
             self.__close_connection()
             exit()
          
+        
+        # Commit changes to db
+        self.__db.commit()
+        
         # close db cursor
         self.__close_connection()
 
@@ -53,7 +58,7 @@ class Admin:
             print("Invalid correct option number. Aborting test creation.")
             return
         query = "INSERT INTO tests (id, question, options, answer) VALUES (%s, %s, %s, %s)"
-        values = (None, question, ','.join(options), correct_option)
+        values = (None, question, json.dumps(options), correct_option)
         self.__db_cursor.execute(query, values)
         print("Test created successfully!")
     
