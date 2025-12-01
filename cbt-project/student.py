@@ -12,7 +12,6 @@ class Student:
  
         self.__students = []
         self.__questions = []
-        self.__answers = []
 
     # "What is the capital of Canada? \n A: Ottawa \n B: Alberta \n C: Vancouver",
     #         "Who painted the Mona Lisa? \n A: Leonardo da Vinci \n B: Poseidon Reily \n C: Fred Coleman",
@@ -41,21 +40,27 @@ class Student:
             print("No students registered. Exiting application...\n")
             self.__db_cursor.close()
             exit()
-        else:
-            #populate students into class variable
-            self.__db_cursor.execute("SELECT id,name FROM students")
-            student_data_frm_db = self.__db_cursor.fetchall()
-            self.__students = [{'id':student[0], 'name':student[1], 'question_and_answer': []} for student in student_data_frm_db]
-
-            #populate tests into questions class variable
-            self.__db_cursor.execute("SELECT * FROM tests")
-            tests = self.__db_cursor.fetchall()
-            for test in tests:
-                t = f"{test[0]}. {test[1]} \n"
-                test_options = [(i,op) for i,op in enumerate(test[2].split(','), 1)]
-                for option in test_options:
-                    t += f" {chr(64+option[0])}: {option[1]} \n"
-                self.__questions.append({'id': test[0], 'qs': t, 'answer': test[3]})
+        
+        #populate students into class variable
+        self.__db_cursor.execute("SELECT id,name FROM students")
+        student_data_frm_db = self.__db_cursor.fetchall()
+        self.__students = [{'id':student[0], 'name':student[1], 'question_and_answer': []} for student in student_data_frm_db]
+        
+        #Further populate student question and answer if they have taken test before
+        for i, student in enumerate(self.__students):
+            self.__db_cursor.execute("SELECT test_id, answer_picked, is_correct FROM test_responses WHERE student_id = %s", (student['id'],))
+            student_qa_data_frm_db = self.__db_cursor.fetchall()
+            self.__students[i]['question_and_answer'] = [(qa[0], chr(64 + qa[1]), qa[2]) for qa in student_qa_data_frm_db]  
+            
+        #populate tests into questions class variable
+        self.__db_cursor.execute("SELECT * FROM tests")
+        tests = self.__db_cursor.fetchall()
+        for test in tests:
+            t = f"{test[0]}. {test[1]} \n"
+            test_options = [(i,op) for i,op in enumerate(test[2].split(','), 1)]
+            for option in test_options:
+                t += f" {chr(64+option[0])}: {option[1]} \n"
+            self.__questions.append({'id': test[0], 'qs': t, 'answer': test[3]})
             
 
         
@@ -67,7 +72,10 @@ class Student:
             self.__commit_test_results()
         
         #Calculate score for each student
+        self.__show_results()
         
+        print("Student module operations completed...\n")
+        self.__db_cursor.close()
         
         
     def __no_of_student_exist(self):
@@ -146,6 +154,9 @@ class Student:
         _total = 0
         _min = 0
         _min_stud = ''
+        
+        _highest_possible_score = len(self.__questions) * 33
+        
         isFirstStudentIteration = True
         for student in self.__students:
             name = student['name'].capitalize()
@@ -162,7 +173,7 @@ class Student:
                 isFirstStudentIteration = False
                 
             grade = "Fail"
-            if score >= 50:
+            if score >= _highest_possible_score/2:
                 grade = "Pass"
             print(f"{name} = {score}, Grade: {grade}")
             
@@ -178,7 +189,7 @@ class Student:
             
         iavg = _total/len(self.__students)
 
-        print(f"\nMax Student= {_max_stude} has {_max}\nMin Student = {_min_stud} has {_min}\nAverage = {iavg}\nNumber of students registered = {self.__final_students_registered}")
+        print(f"\nMax Student= {_max_stude} has {_max}\nMin Student = {_min_stud} has {_min}\nAverage = {iavg}\nNumber of students registered = {len(self.__students)}")
 
     
     
