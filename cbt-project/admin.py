@@ -1,34 +1,13 @@
 from config import Config
 class Admin:
     def __init__(self):
-        self.config = Config()
-        self.db_cursor = self.config.get_db_cursor()
-        
-    def __create_test(self):
-        question = str(input("Enter question: ")).strip()
-        
-        option_range = int(input("Enter number of options for the question: "))
-        options = []
-        
-        for i in range(option_range):
-            option = str(input(f"Enter option {i+1}: ")).strip()
-            options.append(option)
-        
-        correct_option = int(input("Enter correct option (1, 2, 3, etc): ")).strip()
-        
-        if correct_option < 1 or correct_option > option_range:
-            print("Invalid correct option number. Aborting test creation.")
-            return
-        query = "INSERT INTO tests (question, options, answer) VALUES (%s, %s, %s)"
-        values = (question, ','.join(options), correct_option)
-        self.db_cursor.execute(query, values)
-        print("Test created successfully!")
-    
-    def __no_of_question_exist(self):
-        self.db_cursor.execute("SELECT COUNT(*) FROM tests")
-        return self.db_cursor.fetchone()[0]
-        
+        self.__config = Config()
+       
     def orchestrate(self):
+        
+        # Only connect to db when needed
+        self.__db, self.__db_cursor = self.__config.get_db_cursor()
+        
         print("Admin Module Started...\n")
         
         while True:
@@ -51,9 +30,40 @@ class Admin:
             print(f"{question_count} test(s) are available for students. You can proceed.\n")
         else:
             print("No tests available. Exiting application.\n")
-            self.db_cursor.close()
+            self.__close_connection()
             exit()
          
         # close db cursor
-        self.db_cursor.close()
+        self.__close_connection()
+
+
+    def __create_test(self):
+        question = str(input("Enter question: ")).strip()
         
+        option_range = int(input("Enter number of options for the question: "))
+        options = []
+        
+        for i in range(option_range):
+            option = str(input(f"Enter option {i+1}: ")).strip()
+            options.append(option)
+        
+        correct_option = int(input("Enter correct option (1, 2, 3, etc): "))
+        
+        if correct_option < 1 or correct_option > option_range:
+            print("Invalid correct option number. Aborting test creation.")
+            return
+        query = "INSERT INTO tests (id, question, options, answer) VALUES (%s, %s, %s, %s)"
+        values = (None, question, ','.join(options), correct_option)
+        self.__db_cursor.execute(query, values)
+        print("Test created successfully!")
+    
+    def __no_of_question_exist(self):
+        self.__db_cursor.execute("SELECT COUNT(*) FROM tests")
+        return self.__db_cursor.fetchone()[0]        
+    
+    def __close_connection(self):
+        """Function to close database connection"""
+        if self.__db:
+            self.__db.close()
+        if self.__db_cursor:
+            self.__db_cursor.close()

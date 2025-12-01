@@ -7,17 +7,19 @@ from config import Config
 
 class Student:
     def __init__(self):
-        config = Config()
-        self.__db_cursor = config.get_db_cursor()
- 
+        self.__config = Config()
         self.__students = []
         self.__questions = []
 
-    # "What is the capital of Canada? \n A: Ottawa \n B: Alberta \n C: Vancouver",
-    #         "Who painted the Mona Lisa? \n A: Leonardo da Vinci \n B: Poseidon Reily \n C: Fred Coleman",
-    #         "What is the chemical symbol for gold? \n A: Ag \n B: Ar \n C: Au"
+        # "What is the capital of Canada? \n A: Ottawa \n B: Alberta \n C: Vancouver",
+        #         "Who painted the Mona Lisa? \n A: Leonardo da Vinci \n B: Poseidon Reily \n C: Fred Coleman",
+        #         "What is the chemical symbol for gold? \n A: Ag \n B: Ar \n C: Au"
     
     def orchestrate(self):
+        
+        # Only connect to db when needed
+        self.__db, self.__db_cursor = self.__config.get_db_cursor()
+        
         #Are there students? register
         no_of_students_exist = self.__no_of_student_exist()
         print(f"Welcome to the Student Module..., there are {no_of_students_exist} students available to take test\n You can skip registration if need be")
@@ -38,7 +40,7 @@ class Student:
         no_of_students_exist = self.__no_of_student_exist()
         if no_of_students_exist == 0:
             print("No students registered. Exiting application...\n")
-            self.__db_cursor.close()
+            self.__close_connection()
             exit()
         
         #populate students into class variable
@@ -75,7 +77,7 @@ class Student:
         self.__show_results()
         
         print("Student module operations completed...\n")
-        self.__db_cursor.close()
+        self.__close_connection()
         
         
     def __no_of_student_exist(self):
@@ -93,6 +95,7 @@ class Student:
                 print(f"Student {name} has been registered, Skipping...\n")
                 continue
             data = [
+                None,
                 name,
                 name+'@'+"sqi-pyhton.com",
                 '080'+str(random.randint(10000000,99999999)),
@@ -101,7 +104,7 @@ class Student:
             ]
             students.append(data)
             
-        self.__db_cursor.executemany("INSERT INTO students (name, email, phone, password, reg_number) VALUES (%s, %s, %s, %s, %s)", students)
+        self.__db_cursor.executemany("INSERT INTO students (id, name, email, phone, password, reg_number) VALUES (%s, %s, %s, %s, %s, %s)", students)
     
     def __take_test(self):
         """Function to take test for all registered students"""
@@ -147,7 +150,7 @@ class Student:
                 is_correct = qa[2]
                 self\
                     .__db_cursor\
-                    .execute("INSERT INTO test_responses (answer_picked, is_correct, test_id, student_id) VALUES (%s, %s, %s, %s)", ( 66-ord(student_answer), is_correct, question_id, student_id))
+                    .execute("INSERT INTO test_responses (id, answer_picked, is_correct, test_id, student_id) VALUES (%s, %s, %s, %s, %s)", (None, 66-ord(student_answer), is_correct, question_id, student_id))
 
     def __show_results(self):
         """Result and granding display"""
@@ -195,5 +198,10 @@ class Student:
 
         print(f"\nMax Student= {_max_stude} has {_max}\nMin Student = {_min_stud} has {_min}\nAverage = {iavg}\nNumber of students registered = {len(self.__students)}")
 
-    
+    def __close_connection(self):
+        """Function to close database connection"""
+        if self.__db:
+            self.__db.close()
+        if self.__db_cursor:
+            self.__db_cursor.close()
     
