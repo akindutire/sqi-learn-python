@@ -1,0 +1,82 @@
+-- -------------------------------------------------------------
+-- TablePlus 6.7.4(642)
+--
+-- https://tableplus.com/
+--
+-- Database: sqi_l1
+-- Generation Time: 2025-12-02 11:45:05.2870
+-- -------------------------------------------------------------
+
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8mb4 */;
+/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
+/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
+/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+
+
+DROP TABLE IF EXISTS `students`;
+CREATE TABLE `students` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `name` text,
+  `email` varchar(255) NOT NULL,
+  `phone` varchar(255) DEFAULT NULL,
+  `password` text,
+  `matric_no` varchar(255) DEFAULT NULL,
+  `date_created` datetime DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `user_matic_no_unique` (`matric_no`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+DROP TABLE IF EXISTS `test_responses`;
+CREATE TABLE `test_responses` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `answer_picked` int NOT NULL,
+  `is_correct` tinyint(1) NOT NULL DEFAULT '0',
+  `test_id` int NOT NULL,
+  `student_id` bigint NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `test_id` (`test_id`),
+  KEY `student_id` (`student_id`),
+  CONSTRAINT `test_responses_ibfk_1` FOREIGN KEY (`test_id`) REFERENCES `tests` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `test_responses_ibfk_2` FOREIGN KEY (`student_id`) REFERENCES `students` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+DROP TABLE IF EXISTS `tests`;
+CREATE TABLE `tests` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `question` text NOT NULL,
+  `options` json NOT NULL,
+  `answer` int NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+INSERT INTO `students` (`id`, `name`, `email`, `phone`, `password`, `matric_no`, `date_created`) VALUES
+(6, 'ayo', 'ayo@sqi-pyhton.com', '08088684195', 'RAND', 'SQI-PY-7766', NULL),
+(7, 'dele', 'dele@sqi-pyhton.com', '08068953321', 'RAND', 'SQI-PY-9551', NULL),
+(8, 'bunmi', 'bunmi@sqi-pyhton.com', '08022311086', 'RAND', 'SQI-PY-7315', NULL);
+
+INSERT INTO `test_responses` (`id`, `answer_picked`, `is_correct`, `test_id`, `student_id`) VALUES
+(1, 1, 1, 3, 6),
+(2, 1, 1, 4, 6),
+(3, 0, 0, 3, 7),
+(4, 1, 1, 4, 7),
+(5, -1, 0, 3, 8),
+(6, -1, 0, 4, 8);
+
+INSERT INTO `tests` (`id`, `question`, `options`, `answer`) VALUES
+(3, 'What is the capital of Canada', '[\"Ottawa\", \"Alberta\", \"Vancouver\"]', 1),
+(4, 'Who painted the Mona Lisa', '[\"Da Vinci\", \"Poseidon\", \"Coleman\"]', 1);
+
+
+
+/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
+/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
+/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
