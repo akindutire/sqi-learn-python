@@ -24,60 +24,65 @@ class Student:
         #Are there students? register
         no_of_students_exist = self.__no_of_student_exist()
         print(f"\nWelcome to the Student Module..., there are {no_of_students_exist} students available to take test\n You can skip registration if need be")
-        
-        while True:
-            print("""
-                1. Register student
-                0. Exit student registration
-                """)
-            choice = int(input("Enter your choice: "))
-            if choice == 1:
-                num_of_student_to_register = int(input("Enter number of student to register: "))
-                self.__register(num_of_student_to_register)
-            else:
-                print("Exiting student registration...\n")
-                break
+        try:
+            while True:
+                print("""
+                    1. Register student
+                    0. Exit student registration
+                    """)
+                choice = int(input("Enter your choice: "))
+                if choice == 1:
+                    num_of_student_to_register = int(input("Enter number of student to register: "))
+                    self.__register(num_of_student_to_register)
+                else:
+                    print("Exiting student registration...\n")
+                    break
+                
+            no_of_students_exist = self.__no_of_student_exist()
+            if no_of_students_exist == 0:
+                print("No students registered. Exiting application...\n")
+                self.__close_connection()
+                exit()
             
-        no_of_students_exist = self.__no_of_student_exist()
-        if no_of_students_exist == 0:
-            print("No students registered. Exiting application...\n")
-            self.__close_connection()
-            exit()
-        
-        #populate students into class variable
-        self.__db_cursor.execute("SELECT id,name,matric_no FROM students")
-        student_data_frm_db = self.__db_cursor.fetchall()
-        self.__students = [{'id':student[0], 'name':student[1], 'matric_no': student[2], 'question_and_answer': []} for student in student_data_frm_db]
-        
-        #Further populate student question and answer if they have taken test before
-        for i, student in enumerate(self.__students):
-            self.__db_cursor.execute("SELECT test_id, answer_picked, is_correct FROM test_responses WHERE student_id = %s", (student['id'],))
-            student_qa_data_frm_db = self.__db_cursor.fetchall()
-            self.__students[i]['question_and_answer'] = [(qa[0], chr(64 + qa[1]), qa[2]) for qa in student_qa_data_frm_db]  
+            #populate students into class variable
+            self.__db_cursor.execute("SELECT id,name,matric_no FROM students")
+            student_data_frm_db = self.__db_cursor.fetchall()
+            self.__students = [{'id':student[0], 'name':student[1], 'matric_no': student[2], 'question_and_answer': []} for student in student_data_frm_db]
             
-        #populate tests into questions class variable
-        self.__db_cursor.execute("SELECT * FROM tests")
-        tests = self.__db_cursor.fetchall()
-        for test in tests:
-            t = f"{test[1]} \n"
-            test_options = [(i,op) for i,op in enumerate(json.loads(test[2]), 1)]
-            for option in test_options:
-                t += f" {chr(64+option[0])}: {option[1]} \n"
-            self.__questions.append({'id': test[0], 'qs': t, 'answer': test[3]})
+            #Further populate student question and answer if they have taken test before
+            for i, student in enumerate(self.__students):
+                self.__db_cursor.execute("SELECT test_id, answer_picked, is_correct FROM test_responses WHERE student_id = %s", (student['id'],))
+                student_qa_data_frm_db = self.__db_cursor.fetchall()
+                self.__students[i]['question_and_answer'] = [(qa[0], chr(64 + qa[1]), qa[2]) for qa in student_qa_data_frm_db]  
+                
+            #populate tests into questions class variable
+            self.__db_cursor.execute("SELECT * FROM tests")
+            tests = self.__db_cursor.fetchall()
+            for test in tests:
+                t = f"{test[1]} \n"
+                test_options = [(i,op) for i,op in enumerate(json.loads(test[2]), 1)]
+                for option in test_options:
+                    t += f" {chr(64+option[0])}: {option[1]} \n"
+                self.__questions.append({'id': test[0], 'qs': t, 'answer': test[3]})
 
-        
-        # Take test or skip test
-        choice = int(input("Do you want to take the test now? (1 for Yes, 0 for No): "))
-        if choice == 1:
-            self.__take_test()
-            #commit test to db
-            self.__commit_test_results()
-        
-        #Calculate score for each student
-        self.__show_results()
-        
-        print("Student module operations completed...\n")
-        self.__close_connection()
+            
+            # Take test or skip test
+            choice = int(input("Do you want to take the test now? (1 for Yes, 0 for No): "))
+            if choice == 1:
+                self.__take_test()
+                #commit test to db
+                self.__commit_test_results()
+            
+            #Calculate score for each student
+            self.__show_results()
+            
+            print("Student module operations completed...\n")
+            self.__close_connection()
+            
+        except ValueError as e:
+            print(f"Invalid input: {e}. Aborting student module.")
+            self.__close_connection()
+            return
         
         
     def __no_of_student_exist(self):

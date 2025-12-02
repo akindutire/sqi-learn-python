@@ -18,6 +18,7 @@ class Config:
                 password=self.__password,
                 database=self.__database
             )
+            # db.autocommit = True
             print("Connected to database successfully")
             return db, db.cursor()
         except Exception as e:
